@@ -132,3 +132,4 @@ dist
 # AoC inputs
 example.txt
 input.txt
+.idea/
