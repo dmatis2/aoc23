@@ -59,8 +59,6 @@ const compar = (hand1: string, hand2: string, labels: string[]) => {
     return 0;
 }
 
-// PART 1
-const p1S = performance.now()
 const splits = Array(7).fill(0).map(_ => [])
 const splitsPart2 = Array(7).fill(0).map(_ => [])
 
