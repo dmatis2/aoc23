@@ -10,3 +10,4 @@ Advent of Code 2023 solutions written in Deno
 |5|     5.87ms     | 130s ¯\\_(ツ)_/¯ |
 |6|     0.37ms     |     66.38ms     |
 |7|     8.98ms     |     29.79ms     |
+|8|     5.29ms     |     12.6ms      |
