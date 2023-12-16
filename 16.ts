@@ -1,5 +1,16 @@
 const text = await Deno.readTextFile('input.txt')
 
+const D = {
+    '\\': [
+        [0,1,0,-1],
+        [-1,0,1,0]
+    ],
+    '/': [
+        [0,-1,0,1],
+        [1,0,-1,0]
+    ]
+}
+
 const parsed = text
     .split('\n')
     .map(line => line.split(''))
@@ -9,66 +20,45 @@ const cols = parsed[0].length
 
 const getEnergizedTiles = (beams: [[number, number], number][]) => {
     let newBeams = [];
-    let visited = new Set<string>();
-    let visitedMap = new Map<string, number>();
+    const visited = new Set<string>();
+    const visitedMap = new Map<string, number>();
 
     while(true) {
         newBeams = [];
         beams.forEach(beam => {
-            const key = JSON.stringify(beam);
-            const posKey = JSON.stringify(beam[0]);
+            const key = `${beam[0][0]},${beam[0][1]},${beam[1]}`
+            const posKey = `${beam[0][0]},${beam[0][1]}`
             if(visited.has(key)) {
-                visitedMap.set(posKey, visitedMap.get(posKey)! + 1);
                 return;
             }
 
-            const [r, c] = beam[0]
-            const dir = beam[1]
+            const [[r, c], dir] = beam;
 
             if(r < 0 || r >= rows) return;
             if(c < 0 || c >= cols) return;
 
+            const ch = parsed[r][c];
+
             visitedMap.set(posKey, 1);
             visited.add(key)
 
-            if([1,3].includes(dir) && parsed[r][c] === '|') {
+            if((dir%2 === 1) && ch === '|') {
                 newBeams.push([[r - 1, c], 0])
                 newBeams.push([[r + 1, c], 2])
                 return;
             }
-            else if([0,2].includes(dir) && parsed[r][c] === '-') {
+            else if((dir% 2 === 0) && ch === '-') {
                 newBeams.push([[r, c - 1], 3])
                 newBeams.push([[r, c + 1], 1])
                 return;
             }
-            else if(parsed[r][c] === '\\') {
-                if(dir === 0) {
-                    newBeams.push([[r, c - 1], 3])
-                }
-                if(dir === 1) {
-                    newBeams.push([[r + 1, c], 2])
-                }
-                if(dir === 2) {
-                    newBeams.push([[r, c + 1], 1])
-                }
-                if(dir === 3) {
-                    newBeams.push([[r - 1, c], 0])
-                }
-                return;
-            }
-            else if(parsed[r][c] === '/') {
-                if(dir === 0) {
-                    newBeams.push([[r, c + 1], 1])
-                }
-                if(dir === 1) {
-                    newBeams.push([[r - 1, c], 0])
-                }
-                if(dir === 2) {
-                    newBeams.push([[r, c - 1], 3])
-                }
-                if(dir === 3) {
-                    newBeams.push([[r + 1, c], 2])
-                }
+            else if(ch === '/' || ch === '\\') {
+                const newR = r + D[ch][0][dir]
+                const newC = c + D[ch][1][dir]
+                const newD = ch === '/' ? (5 - dir) % 4 : 3 - dir;
+                if(newR < 0 || newR >= rows) return;
+                if(newC < 0 || newC >= cols) return;
+                newBeams.push([[newR, newC], newD])
                 return;
             } else {
                 if(dir === 0) {
@@ -86,7 +76,7 @@ const getEnergizedTiles = (beams: [[number, number], number][]) => {
             }
         })
         if(JSON.stringify(beams) !== JSON.stringify(newBeams)) {
-            beams = structuredClone(newBeams);
+            beams = newBeams;
             continue;
         }
         break;
@@ -98,25 +88,20 @@ const getEnergizedTiles = (beams: [[number, number], number][]) => {
 const solvePart2 = () => {
     let max = -Infinity;
     for(let r = 0; r < rows; r++) {
-        for(let c = 0; c < cols; c++) {
-            if(r === 0) {
-                const tmp = getEnergizedTiles([[[r, c], 2]])
-                if(tmp > max) max = tmp;
-            }
-            if(c === 0) {
-                const tmp = getEnergizedTiles([[[r, c], 1]])
-                if(tmp > max) max = tmp;
-            }
-            if(r === rows - 1) {
-                const tmp = getEnergizedTiles([[[r, c], 0]])
-                if(tmp > max) max = tmp;
-            }
-            if(c === cols - 1) {
-                const tmp = getEnergizedTiles([[[r, c], 3]])
-                if(tmp > max) max = tmp;
-            }
-        }
+        max = Math.max(
+            max,
+            getEnergizedTiles([[[r, 0], 1]]),
+            getEnergizedTiles([[[r, cols - 1], 3]])
+        )
     }
+    for(let c = 0; c < cols; c++) {
+        max = Math.max(
+            max,
+            getEnergizedTiles([[[0, c], 2]]),
+            getEnergizedTiles([[[rows - 1, c], 0]])
+        )
+    }
+
     return max;
 }
 
